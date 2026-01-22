@@ -1,15 +1,8 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/data-quality-monitor/browser"
-      }
-    }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/index.html" }
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/data-quality-monitor/browser",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
