@@ -1,0 +1,69 @@
+.app-shell {
+  height: 100vh;
+}
+
+.app-sidenav {
+  width: 260px;
+  border-right: 1px solid var(--dq-outline);
+  background: #f8fafc;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--dq-text);
+}
+
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-title {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.app-content {
+  padding: 24px 28px 36px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.user-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+}
+
+mat-nav-list a.active {
+  background: rgba(27, 154, 170, 0.12);
+  border-radius: 12px;
+}
+
+@media (max-width: 768px) {
+  .app-content {
+    padding: 16px;
+  }
+
+  .user-button span,
+  .user-button mat-icon:last-child {
+    display: none;
+  }
+}
