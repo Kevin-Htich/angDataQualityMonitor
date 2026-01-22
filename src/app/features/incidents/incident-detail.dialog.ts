@@ -8,7 +8,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Incident, IncidentStatus } from '../../core/models';
-import { MockApiService } from '../../core/services/mock-api.service';
+import { DATA_API, DataApiService } from '../../core/services/data-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
 
@@ -130,7 +130,7 @@ export class IncidentDetailDialogComponent {
 
   constructor(
     @Inject(MAT_DIALOG_DATA) data: IncidentDetailDialogData,
-    private readonly api: MockApiService,
+    @Inject(DATA_API) private readonly api: DataApiService,
     private readonly notify: NotificationService,
     private readonly cdr: ChangeDetectorRef
   ) {
@@ -170,3 +170,4 @@ export class IncidentDetailDialogComponent {
     return item.id;
   }
 }
+

@@ -2,10 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Anomaly, Feed, Incident, IncidentStatus, MetricPoint, Rule } from '../models';
+import { DataApiService } from './data-api.service';
 
 @Injectable({ providedIn: 'root' })
-export class MockApiService {
-  constructor(private readonly http: HttpClient) {}
+export class MockApiService extends DataApiService {
+  constructor(private readonly http: HttpClient) {
+    super();
+  }
 
   getFeeds(): Observable<Feed[]> {
     return this.http.get<Feed[]>('/api/feeds');

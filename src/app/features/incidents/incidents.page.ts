@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   DestroyRef,
+  Inject,
   OnInit,
   ViewChild
 } from '@angular/core';
@@ -23,7 +24,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SeverityChipComponent } from '../../shared/components/severity-chip/severity-chip.component';
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
-import { MockApiService } from '../../core/services/mock-api.service';
+import { DATA_API, DataApiService } from '../../core/services/data-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Anomaly, Feed, Incident } from '../../core/models';
 import { IncidentCreateDialogComponent } from './incident-create.dialog';
@@ -80,7 +81,7 @@ export class IncidentsPageComponent implements OnInit {
   loading = true;
 
   constructor(
-    private readonly api: MockApiService,
+    @Inject(DATA_API) private readonly api: DataApiService,
     private readonly notify: NotificationService,
     private readonly dialog: MatDialog,
     private readonly cdr: ChangeDetectorRef,

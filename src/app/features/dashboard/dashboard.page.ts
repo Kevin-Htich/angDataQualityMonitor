@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   DestroyRef,
+  Inject,
   OnInit,
   ViewChild
 } from '@angular/core';
@@ -27,7 +28,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { StatusChipComponent } from '../../shared/components/status-chip/status-chip.component';
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
-import { MockApiService } from '../../core/services/mock-api.service';
+import { DATA_API, DataApiService } from '../../core/services/data-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Anomaly, Feed, FeedStatus, Incident, MetricPoint, Rule } from '../../core/models';
 
@@ -123,7 +124,7 @@ export class DashboardPageComponent implements OnInit {
   };
 
   constructor(
-    private readonly api: MockApiService,
+    @Inject(DATA_API) private readonly api: DataApiService,
     private readonly notify: NotificationService,
     private readonly cdr: ChangeDetectorRef,
     private readonly destroyRef: DestroyRef

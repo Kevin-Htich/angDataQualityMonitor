@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   DestroyRef,
+  Inject,
   OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -23,7 +24,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { StatusChipComponent } from '../../shared/components/status-chip/status-chip.component';
 import { SeverityChipComponent } from '../../shared/components/severity-chip/severity-chip.component';
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
-import { MockApiService } from '../../core/services/mock-api.service';
+import { DATA_API, DataApiService } from '../../core/services/data-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Anomaly, Feed, Incident, MetricPoint } from '../../core/models';
 import { AcknowledgeAnomalyDialogComponent } from './acknowledge-anomaly.dialog';
@@ -75,7 +76,7 @@ export class FeedDetailPageComponent implements OnInit {
 
   constructor(
     private readonly route: ActivatedRoute,
-    private readonly api: MockApiService,
+    @Inject(DATA_API) private readonly api: DataApiService,
     private readonly notify: NotificationService,
     private readonly dialog: MatDialog,
     private readonly cdr: ChangeDetectorRef,

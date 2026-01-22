@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   DestroyRef,
+  Inject,
   OnInit,
   ViewChild
 } from '@angular/core';
@@ -22,7 +23,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SeverityChipComponent } from '../../shared/components/severity-chip/severity-chip.component';
-import { MockApiService } from '../../core/services/mock-api.service';
+import { DATA_API, DataApiService } from '../../core/services/data-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Feed, Rule } from '../../core/models';
 import { RuleDialogComponent } from './rule-dialog.component';
@@ -71,7 +72,7 @@ export class RulesPageComponent implements OnInit {
   loading = true;
 
   constructor(
-    private readonly api: MockApiService,
+    @Inject(DATA_API) private readonly api: DataApiService,
     private readonly notify: NotificationService,
     private readonly dialog: MatDialog,
     private readonly cdr: ChangeDetectorRef,
