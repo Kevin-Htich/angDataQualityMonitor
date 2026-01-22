@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   OnInit,
   ViewChild
 } from '@angular/core';
@@ -82,7 +83,8 @@ export class IncidentsPageComponent implements OnInit {
     private readonly api: MockApiService,
     private readonly notify: NotificationService,
     private readonly dialog: MatDialog,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly destroyRef: DestroyRef
   ) {
     this.dataSource.filterPredicate = (data, filter) => {
       const [search, severity, status] = filter.split('|');
@@ -96,9 +98,15 @@ export class IncidentsPageComponent implements OnInit {
   ngOnInit(): void {
     this.loadData();
 
-    this.searchControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.applyFilter());
-    this.severityControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.applyFilter());
-    this.statusControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.applyFilter());
+    this.searchControl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.applyFilter());
+    this.severityControl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.applyFilter());
+    this.statusControl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.applyFilter());
   }
 
   ngAfterViewInit(): void {
@@ -122,7 +130,9 @@ export class IncidentsPageComponent implements OnInit {
       if (!result) {
         return;
       }
-      this.api.createIncident(result).pipe(takeUntilDestroyed()).subscribe({
+      this.api.createIncident(result)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
         next: () => {
           this.notify.success('Incident created.');
           this.loadIncidents();
@@ -146,7 +156,7 @@ export class IncidentsPageComponent implements OnInit {
   private loadData(): void {
     this.loading = true;
 
-    this.api.getFeeds().pipe(takeUntilDestroyed()).subscribe({
+    this.api.getFeeds().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (feeds) => {
         this.feeds = feeds;
         this.cdr.markForCheck();
@@ -154,7 +164,7 @@ export class IncidentsPageComponent implements OnInit {
       error: () => this.notify.error('Unable to load feeds.')
     });
 
-    this.api.getAnomalies().pipe(takeUntilDestroyed()).subscribe({
+    this.api.getAnomalies().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (anomalies) => {
         this.anomalies = anomalies;
         this.cdr.markForCheck();
@@ -166,7 +176,7 @@ export class IncidentsPageComponent implements OnInit {
   }
 
   private loadIncidents(): void {
-    this.api.getIncidents().pipe(takeUntilDestroyed()).subscribe({
+    this.api.getIncidents().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (incidents) => {
         this.dataSource.data = incidents;
         this.loading = false;

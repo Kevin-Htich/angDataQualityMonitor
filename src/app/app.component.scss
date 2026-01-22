@@ -5,7 +5,7 @@
 .app-sidenav {
   width: 260px;
   border-right: 1px solid var(--dq-outline);
-  background: #f8fafc;
+  background: #f5f7fb;
 }
 
 .brand {
@@ -24,6 +24,9 @@
   z-index: 10;
   display: flex;
   gap: 8px;
+  background: #ffffff;
+  color: var(--dq-text);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
 }
 
 .toolbar-title {
@@ -33,6 +36,8 @@
 
 .app-content {
   padding: 24px 28px 36px;
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
 .spacer {
@@ -53,7 +58,7 @@
 }
 
 mat-nav-list a.active {
-  background: rgba(27, 154, 170, 0.12);
+  background: rgba(63, 81, 181, 0.12);
   border-radius: 12px;
 }
 

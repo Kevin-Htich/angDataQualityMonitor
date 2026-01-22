@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   OnInit,
   ViewChild
 } from '@angular/core';
@@ -28,7 +29,7 @@ import { StatusChipComponent } from '../../shared/components/status-chip/status-
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
 import { MockApiService } from '../../core/services/mock-api.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { Anomaly, Feed, FeedStatus, Incident, MetricPoint } from '../../core/models';
+import { Anomaly, Feed, FeedStatus, Incident, MetricPoint, Rule } from '../../core/models';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -73,12 +74,12 @@ export class DashboardPageComponent implements OnInit {
 
   readonly searchControl = new FormControl('', { nonNullable: true });
   readonly statusControl = new FormControl<FeedStatus | 'All'>('All', { nonNullable: true });
-  readonly feedSelectControl = new FormControl('feed-1', { nonNullable: true });
 
   dataSource = new MatTableDataSource<Feed>([]);
   feeds: Feed[] = [];
   incidents: Incident[] = [];
   anomalies: Anomaly[] = [];
+  rules: Rule[] = [];
 
   loading = true;
   errorMessage = '';
@@ -90,7 +91,8 @@ export class DashboardPageComponent implements OnInit {
     criticalIncidents: 0
   };
 
-  lineChartData: ChartDataset<'line'>[] = [];
+  errorRateChartData: ChartDataset<'line'>[] = [];
+  latencyChartData: ChartDataset<'line'>[] = [];
   lineChartLabels: string[] = [];
 
   barChartData: ChartConfiguration<'bar'>['data'] = {
@@ -123,7 +125,8 @@ export class DashboardPageComponent implements OnInit {
   constructor(
     private readonly api: MockApiService,
     private readonly notify: NotificationService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly destroyRef: DestroyRef
   ) {
     this.dataSource.filterPredicate = (data, filter) => {
       const [search, status] = filter.split('|');
@@ -136,11 +139,12 @@ export class DashboardPageComponent implements OnInit {
   ngOnInit(): void {
     this.loadData();
 
-    this.searchControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.applyFilter());
-    this.statusControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.applyFilter());
-    this.feedSelectControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((feedId) => {
-      this.loadMetrics(feedId);
-    });
+    this.searchControl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.applyFilter());
+    this.statusControl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.applyFilter());
   }
 
   ngAfterViewInit(): void {
@@ -153,7 +157,7 @@ export class DashboardPageComponent implements OnInit {
   }
 
   refresh(): void {
-    this.api.refresh().pipe(takeUntilDestroyed()).subscribe({
+    this.api.refresh().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.loadData();
         this.notify.success('Dashboard refreshed.');
@@ -166,13 +170,10 @@ export class DashboardPageComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    this.api.getFeeds().pipe(takeUntilDestroyed()).subscribe({
+    this.api.getFeeds().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (feeds) => {
         this.feeds = feeds;
         this.dataSource.data = feeds;
-        if (!this.feedSelectControl.value && feeds.length) {
-          this.feedSelectControl.setValue(feeds[0].id);
-        }
         this.applyFilter();
         this.updateSummary();
         this.loading = false;
@@ -186,7 +187,7 @@ export class DashboardPageComponent implements OnInit {
       }
     });
 
-    this.api.getIncidents().pipe(takeUntilDestroyed()).subscribe({
+    this.api.getIncidents().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (incidents) => {
         this.incidents = incidents;
         this.updateSummary();
@@ -197,7 +198,7 @@ export class DashboardPageComponent implements OnInit {
       }
     });
 
-    this.api.getAnomalies().pipe(takeUntilDestroyed()).subscribe({
+    this.api.getAnomalies().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (anomalies) => {
         this.anomalies = anomalies;
         this.updateAnomalyChart();
@@ -206,16 +207,21 @@ export class DashboardPageComponent implements OnInit {
       error: () => this.notify.error('Unable to load anomalies.')
     });
 
-    this.loadMetrics(this.feedSelectControl.value);
+    this.api.getRules().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (rules) => {
+        this.rules = rules;
+        this.cdr.markForCheck();
+      },
+      error: () => this.notify.error('Unable to load rules.')
+    });
+
+    this.loadMetrics();
   }
 
-  private loadMetrics(feedId: string): void {
-    if (!feedId) {
-      return;
-    }
-    this.api.getMetrics(feedId).pipe(takeUntilDestroyed()).subscribe({
+  private loadMetrics(): void {
+    this.api.getMetrics().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (metrics) => {
-        this.updateLineChart(metrics);
+        this.updateLineCharts(metrics);
         this.cdr.markForCheck();
       },
       error: () => this.notify.error('Unable to load metrics.')
@@ -237,29 +243,66 @@ export class DashboardPageComponent implements OnInit {
     };
   }
 
-  private updateLineChart(metrics: MetricPoint[]): void {
-    const sorted = [...metrics].sort(
+  private updateLineCharts(metrics: MetricPoint[]): void {
+    const grouped = new Map<string, MetricPoint[]>();
+    metrics.forEach((metric) => {
+      if (!grouped.has(metric.feedId)) {
+        grouped.set(metric.feedId, []);
+      }
+      grouped.get(metric.feedId)!.push(metric);
+    });
+
+    const palette = [
+      { stroke: '#2f8f5b', fill: 'rgba(47, 143, 91, 0.08)' },
+      { stroke: '#2563eb', fill: 'rgba(37, 99, 235, 0.08)' },
+      { stroke: '#ef4444', fill: 'rgba(239, 68, 68, 0.08)' },
+      { stroke: '#f59e0b', fill: 'rgba(245, 158, 11, 0.08)' }
+    ];
+
+    const feedIds = Array.from(grouped.keys());
+    const labelSource = grouped.get(feedIds[0] ?? '');
+    if (!labelSource) {
+      this.lineChartLabels = [];
+      this.errorRateChartData = [];
+      this.latencyChartData = [];
+      return;
+    }
+
+    const baseSorted = [...labelSource].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
-    this.lineChartLabels = sorted.map((point) =>
+    const visible = baseSorted.slice(-6);
+    this.lineChartLabels = visible.map((point) =>
       new Date(point.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     );
-    this.lineChartData = [
-      {
-        data: sorted.map((point) => point.errorRate),
-        label: 'Error Rate %',
+
+    this.errorRateChartData = [];
+    this.latencyChartData = [];
+
+    feedIds.forEach((feedId, index) => {
+      const feedMetrics = [...(grouped.get(feedId) ?? [])].sort(
+        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+      const sliced = feedMetrics.slice(-6);
+      const color = palette[index % palette.length];
+      const feedName = this.feeds.find((feed) => feed.id === feedId)?.name ?? feedId;
+
+      this.errorRateChartData.push({
+        data: sliced.map((point) => point.errorRate),
+        label: feedName,
         tension: 0.35,
-        borderColor: '#d64545',
-        backgroundColor: 'rgba(214, 69, 69, 0.18)'
-      },
-      {
-        data: sorted.map((point) => point.latencyMs),
-        label: 'Latency (ms)',
+        borderColor: color.stroke,
+        backgroundColor: color.fill
+      });
+
+      this.latencyChartData.push({
+        data: sliced.map((point) => point.latencyMs),
+        label: feedName,
         tension: 0.35,
-        borderColor: '#1b9aaa',
-        backgroundColor: 'rgba(27, 154, 170, 0.18)'
-      }
-    ];
+        borderColor: color.stroke,
+        backgroundColor: color.fill
+      });
+    });
   }
 
   private updateAnomalyChart(): void {
@@ -286,6 +329,44 @@ export class DashboardPageComponent implements OnInit {
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
+  }
+
+  incidentStatusClass(status: string): string {
+    return `status-pill status-${status.toLowerCase().replace(' ', '-')}`;
+  }
+
+  anomalyLabel(count: number): string {
+    if (count === 0) {
+      return '—';
+    }
+    if (count <= 2) {
+      return `${count} Warnings`;
+    }
+    if (count <= 5) {
+      return `${count} Anomalies`;
+    }
+    return `${count} Alerts`;
+  }
+
+  ruleCondition(rule: Rule): string {
+    return `${rule.metric} ${rule.operator} ${rule.threshold}`;
+  }
+
+  anomalyClass(count: number): string {
+    if (count === 0) {
+      return 'anomaly-chip anomaly-zero';
+    }
+    if (count <= 2) {
+      return 'anomaly-chip anomaly-warn';
+    }
+    if (count <= 5) {
+      return 'anomaly-chip anomaly-alert';
+    }
+    return 'anomaly-chip anomaly-critical';
+  }
+
+  severityClass(severity: string): string {
+    return `status-pill severity-${severity.toLowerCase()}`;
   }
 
   trackById(_: number, item: { id: string }): string {

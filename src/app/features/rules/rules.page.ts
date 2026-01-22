@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   OnInit,
   ViewChild
 } from '@angular/core';
@@ -73,7 +74,8 @@ export class RulesPageComponent implements OnInit {
     private readonly api: MockApiService,
     private readonly notify: NotificationService,
     private readonly dialog: MatDialog,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly destroyRef: DestroyRef
   ) {
     this.dataSource.filterPredicate = (data, filter) =>
       data.name.toLowerCase().includes(filter) ||
@@ -82,7 +84,9 @@ export class RulesPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadData();
-    this.searchControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.applyFilter());
+    this.searchControl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.applyFilter());
   }
 
   ngAfterViewInit(): void {
@@ -108,7 +112,9 @@ export class RulesPageComponent implements OnInit {
         id: `rule-${Date.now()}`,
         feedId: result.scope === 'feed' ? result.feedId : undefined
       };
-      this.api.addRule(rule).pipe(takeUntilDestroyed()).subscribe({
+      this.api.addRule(rule)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
         next: () => {
           this.notify.success('Rule added.');
           this.loadRules();
@@ -120,7 +126,9 @@ export class RulesPageComponent implements OnInit {
 
   toggleRule(rule: Rule): void {
     const updated = { ...rule, enabled: !rule.enabled };
-    this.api.updateRule(updated).pipe(takeUntilDestroyed()).subscribe({
+    this.api.updateRule(updated)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.notify.success('Rule updated.');
         this.loadRules();
@@ -137,7 +145,7 @@ export class RulesPageComponent implements OnInit {
   }
 
   private loadData(): void {
-    this.api.getFeeds().pipe(takeUntilDestroyed()).subscribe({
+    this.api.getFeeds().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (feeds) => {
         this.feeds = feeds;
         this.cdr.markForCheck();
@@ -149,7 +157,7 @@ export class RulesPageComponent implements OnInit {
 
   private loadRules(): void {
     this.loading = true;
-    this.api.getRules().pipe(takeUntilDestroyed()).subscribe({
+    this.api.getRules().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (rules) => {
         this.dataSource.data = rules;
         this.loading = false;

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -77,7 +78,8 @@ export class FeedDetailPageComponent implements OnInit {
     private readonly api: MockApiService,
     private readonly notify: NotificationService,
     private readonly dialog: MatDialog,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly destroyRef: DestroyRef
   ) {}
 
   ngOnInit(): void {
@@ -85,7 +87,7 @@ export class FeedDetailPageComponent implements OnInit {
       .pipe(
         map((params) => params.get('id')),
         distinctUntilChanged(),
-        takeUntilDestroyed()
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((id) => {
         if (id) {
@@ -102,7 +104,9 @@ export class FeedDetailPageComponent implements OnInit {
       if (createIncident === undefined) {
         return;
       }
-      this.api.acknowledgeAnomaly(anomaly.id, createIncident).pipe(takeUntilDestroyed()).subscribe({
+      this.api.acknowledgeAnomaly(anomaly.id, createIncident)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
         next: () => {
           this.notify.success('Anomaly acknowledged.');
           if (this.feed) {
@@ -117,7 +121,7 @@ export class FeedDetailPageComponent implements OnInit {
   private loadFeed(feedId: string): void {
     this.loading = true;
 
-    this.api.getFeed(feedId).pipe(takeUntilDestroyed()).subscribe({
+    this.api.getFeed(feedId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (feed) => {
         this.feed = feed;
         this.loading = false;
@@ -130,7 +134,7 @@ export class FeedDetailPageComponent implements OnInit {
       }
     });
 
-    this.api.getMetrics(feedId).pipe(takeUntilDestroyed()).subscribe({
+    this.api.getMetrics(feedId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (metrics) => {
         this.metrics = metrics;
         this.updateChart(metrics);
@@ -139,7 +143,7 @@ export class FeedDetailPageComponent implements OnInit {
       error: () => this.notify.error('Unable to load metrics.')
     });
 
-    this.api.getAnomalies(feedId).pipe(takeUntilDestroyed()).subscribe({
+    this.api.getAnomalies(feedId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (anomalies) => {
         this.anomalies = anomalies;
         this.cdr.markForCheck();
@@ -147,7 +151,7 @@ export class FeedDetailPageComponent implements OnInit {
       error: () => this.notify.error('Unable to load anomalies.')
     });
 
-    this.api.getIncidents(feedId).pipe(takeUntilDestroyed()).subscribe({
+    this.api.getIncidents(feedId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (incidents) => {
         this.incidents = incidents;
         this.cdr.markForCheck();

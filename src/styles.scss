@@ -20,17 +20,17 @@ $theme: mat.define-light-theme((
 @include mat.all-component-themes($theme);
 
 :root {
-  --dq-background: radial-gradient(circle at top left, #f3f6fb 0%, #edf2f7 35%, #f7f9fc 100%);
+  --dq-background: #e9eef5;
   --dq-surface: #ffffff;
   --dq-text: #1a2332;
   --dq-muted: #6b778c;
-  --dq-outline: rgba(26, 35, 50, 0.08);
-  --dq-accent: #1b9aaa;
+  --dq-outline: rgba(15, 23, 42, 0.08);
+  --dq-accent: #3f51b5;
   --dq-warning: #e6a23c;
   --dq-critical: #d64545;
   --dq-healthy: #2f8f5b;
   --dq-degraded: #f2b84b;
-  --dq-shadow: 0 16px 40px rgba(25, 40, 72, 0.08);
+  --dq-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
 * {
@@ -105,18 +105,24 @@ a {
 }
 
 .chip-healthy {
-  background: rgba(47, 143, 91, 0.15);
+  background: rgba(47, 143, 91, 0.18);
   color: var(--dq-healthy);
+  --mdc-chip-elevated-container-color: rgba(47, 143, 91, 0.18);
+  --mdc-chip-label-text-color: var(--dq-healthy);
 }
 
 .chip-degraded {
-  background: rgba(242, 184, 75, 0.2);
+  background: rgba(242, 184, 75, 0.25);
   color: #9b6b1b;
+  --mdc-chip-elevated-container-color: rgba(242, 184, 75, 0.25);
+  --mdc-chip-label-text-color: #9b6b1b;
 }
 
 .chip-critical {
-  background: rgba(214, 69, 69, 0.18);
+  background: rgba(214, 69, 69, 0.2);
   color: var(--dq-critical);
+  --mdc-chip-elevated-container-color: rgba(214, 69, 69, 0.2);
+  --mdc-chip-label-text-color: var(--dq-critical);
 }
 
 .severity-low {
@@ -146,7 +152,7 @@ a {
 .mat-mdc-card {
   border-radius: 16px;
   border: 1px solid var(--dq-outline);
-  box-shadow: var(--dq-shadow);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
 }
 
 .mat-mdc-card-title {
