@@ -144,10 +144,11 @@ export class IncidentsPageComponent implements OnInit {
   }
 
   openDetails(incident: Incident): void {
-    this.dialog.open(IncidentDetailDialogComponent, {
+    const dialogRef = this.dialog.open(IncidentDetailDialogComponent, {
       width: '680px',
       data: { incident }
     });
+    dialogRef.afterClosed().subscribe(() => this.loadIncidents());
   }
 
   getFeedName(feedId: string): string {
@@ -200,6 +201,10 @@ export class IncidentsPageComponent implements OnInit {
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
+  }
+
+  statusClass(status: string): string {
+    return `status-pill status-${status.toLowerCase().replace(' ', '-')}`;
   }
 
   trackById(_: number, item: { id: string }): string {

@@ -58,6 +58,18 @@ export class MockBackendInterceptor implements HttpInterceptor {
         return this.ok(this.store.getIncidents(feedId));
       }
 
+      if (req.method === 'PATCH' && resource === 'incidents' && id) {
+        const { status, summary } = req.body as { status: any; summary: string };
+        const incident = this.store.updateIncidentStatus(id, status, summary ?? 'Status updated.');
+        return incident ? this.ok(incident) : this.notFound('Incident not found');
+      }
+
+      if (req.method === 'POST' && resource === 'incidents' && id && action === 'comments') {
+        const { author, message } = req.body as { author: string; message: string };
+        const incident = this.store.addIncidentComment(id, author, message);
+        return incident ? this.ok(incident) : this.notFound('Incident not found');
+      }
+
       if (req.method === 'POST' && resource === 'incidents') {
         const payload = req.body as {
           title: string;
@@ -76,18 +88,6 @@ export class MockBackendInterceptor implements HttpInterceptor {
           anomalyIds: payload.anomalyIds ?? []
         });
         return this.ok(incident);
-      }
-
-      if (req.method === 'PATCH' && resource === 'incidents' && id) {
-        const { status, summary } = req.body as { status: any; summary: string };
-        const incident = this.store.updateIncidentStatus(id, status, summary ?? 'Status updated.');
-        return incident ? this.ok(incident) : this.notFound('Incident not found');
-      }
-
-      if (req.method === 'POST' && resource === 'incidents' && id && action === 'comments') {
-        const { author, message } = req.body as { author: string; message: string };
-        const incident = this.store.addIncidentComment(id, author, message);
-        return incident ? this.ok(incident) : this.notFound('Incident not found');
       }
 
       if (req.method === 'GET' && resource === 'rules') {
