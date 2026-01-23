@@ -11,10 +11,14 @@ export class RelativeTimePipe implements PipeTransform {
     }
     const date = value instanceof Date ? value : new Date(value);
     const diffMs = Date.now() - date.getTime();
-    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
 
-    if (diffMinutes < 1) {
+    if (diffSeconds < 5) {
       return 'Just now';
+    }
+    if (diffSeconds < 60) {
+      return `${diffSeconds}s ago`;
     }
     if (diffMinutes < 60) {
       return `${diffMinutes}m ago`;
