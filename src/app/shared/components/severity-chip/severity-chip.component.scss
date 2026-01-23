@@ -3,3 +3,31 @@ mat-chip {
   text-transform: none;
   letter-spacing: 0.01em;
 }
+
+.severity-low {
+  background: rgba(56, 142, 60, 0.16);
+  color: #2e7d32;
+  --mdc-chip-elevated-container-color: rgba(56, 142, 60, 0.16);
+  --mdc-chip-label-text-color: #2e7d32;
+}
+
+.severity-medium {
+  background: rgba(251, 192, 45, 0.2);
+  color: #9a6b00;
+  --mdc-chip-elevated-container-color: rgba(251, 192, 45, 0.2);
+  --mdc-chip-label-text-color: #9a6b00;
+}
+
+.severity-high {
+  background: rgba(255, 87, 34, 0.18);
+  color: #e65100;
+  --mdc-chip-elevated-container-color: rgba(255, 87, 34, 0.18);
+  --mdc-chip-label-text-color: #e65100;
+}
+
+.severity-critical {
+  background: rgba(211, 47, 47, 0.2);
+  color: #b71c1c;
+  --mdc-chip-elevated-container-color: rgba(211, 47, 47, 0.2);
+  --mdc-chip-label-text-color: #b71c1c;
+}

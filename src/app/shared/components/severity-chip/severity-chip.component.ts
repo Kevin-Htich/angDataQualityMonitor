@@ -7,7 +7,7 @@ import { AnomalySeverity } from '../../../core/models';
   selector: 'app-severity-chip',
   standalone: true,
   imports: [MatChipsModule, NgClass],
-  template: ` <mat-chip [ngClass]="chipClass">{{ severity }}</mat-chip> `,
+  template: ` <mat-chip [ngClass]="chipClass" class="severity-chip">{{ severity }}</mat-chip> `,
   styleUrl: './severity-chip.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
