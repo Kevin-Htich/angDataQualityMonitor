@@ -28,6 +28,7 @@ import { DATA_API, DataApiService } from '../../core/services/data-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Anomaly, Feed, Incident, MetricPoint } from '../../core/models';
 import { AcknowledgeAnomalyDialogComponent } from './acknowledge-anomaly.dialog';
+import { ClockService } from '../../core/services/clock.service';
 
 @Component({
   selector: 'app-feed-detail-page',
@@ -73,6 +74,7 @@ export class FeedDetailPageComponent implements OnInit {
       y: { beginAtZero: true }
     }
   };
+  readonly now$ = this.clock.now$;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -80,7 +82,8 @@ export class FeedDetailPageComponent implements OnInit {
     private readonly notify: NotificationService,
     private readonly dialog: MatDialog,
     private readonly cdr: ChangeDetectorRef,
-    private readonly destroyRef: DestroyRef
+    private readonly destroyRef: DestroyRef,
+    private readonly clock: ClockService
   ) {}
 
   ngOnInit(): void {

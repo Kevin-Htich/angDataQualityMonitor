@@ -76,12 +76,16 @@
 
       <ng-container matColumnDef="createdAt">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Created</th>
-        <td mat-cell *matCellDef="let incident">{{ incident.createdAt | relativeTime }}</td>
+        <td mat-cell *matCellDef="let incident">
+          {{ incident.createdAt | relativeTime : (now$ | async) }}
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="updatedAt">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Updated</th>
-        <td mat-cell *matCellDef="let incident">{{ incident.updatedAt | relativeTime }}</td>
+        <td mat-cell *matCellDef="let incident">
+          {{ incident.updatedAt | relativeTime : (now$ | async) }}
+        </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

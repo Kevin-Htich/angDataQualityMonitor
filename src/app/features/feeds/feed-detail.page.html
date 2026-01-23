@@ -49,7 +49,9 @@
 
             <ng-container matColumnDef="detectedAt">
               <th mat-header-cell *matHeaderCellDef>Detected</th>
-              <td mat-cell *matCellDef="let anomaly">{{ anomaly.detectedAt | relativeTime }}</td>
+              <td mat-cell *matCellDef="let anomaly">
+                {{ anomaly.detectedAt | relativeTime : (now$ | async) }}
+              </td>
             </ng-container>
 
             <ng-container matColumnDef="description">
@@ -114,7 +116,9 @@
 
             <ng-container matColumnDef="updatedAt">
               <th mat-header-cell *matHeaderCellDef>Updated</th>
-              <td mat-cell *matCellDef="let incident">{{ incident.updatedAt | relativeTime }}</td>
+              <td mat-cell *matCellDef="let incident">
+                {{ incident.updatedAt | relativeTime : (now$ | async) }}
+              </td>
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedIncidentColumns"></tr>

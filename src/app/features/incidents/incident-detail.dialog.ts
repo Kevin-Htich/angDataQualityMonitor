@@ -11,6 +11,7 @@ import { Incident, IncidentStatus } from '../../core/models';
 import { DATA_API, DataApiService } from '../../core/services/data-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
+import { ClockService } from '../../core/services/clock.service';
 
 export interface IncidentDetailDialogData {
   incident: Incident;
@@ -47,7 +48,7 @@ export interface IncidentDetailDialogData {
           </mat-form-field>
           <button mat-flat-button color="primary" (click)="saveStatus()">Update</button>
         </div>
-        <p class="muted">Owner: {{ incident.owner }} · Updated {{ incident.updatedAt | relativeTime }}</p>
+        <p class="muted">Owner: {{ incident.owner }} · Updated {{ incident.updatedAt | relativeTime : (now$ | async) }}</p>
       </section>
 
       <mat-divider></mat-divider>
@@ -60,7 +61,7 @@ export interface IncidentDetailDialogData {
             <div>
               <strong>{{ event.status }}</strong>
               <div class="muted">{{ event.summary }}</div>
-              <small class="muted">{{ event.timestamp | relativeTime }}</small>
+              <small class="muted">{{ event.timestamp | relativeTime : (now$ | async) }}</small>
             </div>
           </div>
         </div>
@@ -72,7 +73,7 @@ export interface IncidentDetailDialogData {
         <h4>Comments</h4>
         <div class="comment" *ngFor="let comment of incident.comments; trackBy: trackById">
           <strong>{{ comment.author }}</strong>
-          <span class="muted">{{ comment.timestamp | relativeTime }}</span>
+          <span class="muted">{{ comment.timestamp | relativeTime : (now$ | async) }}</span>
           <p>{{ comment.message }}</p>
         </div>
         <mat-form-field appearance="outline" class="comment-box">
@@ -127,12 +128,14 @@ export class IncidentDetailDialogComponent {
   incident: Incident;
   statusControl: FormControl<IncidentStatus>;
   commentControl = new FormControl('', { nonNullable: true });
+  readonly now$ = this.clock.now$;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) data: IncidentDetailDialogData,
     @Inject(DATA_API) private readonly api: DataApiService,
     private readonly notify: NotificationService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly clock: ClockService
   ) {
     this.incident = structuredClone(data.incident);
     this.statusControl = new FormControl(this.incident.status, { nonNullable: true });
@@ -170,4 +173,6 @@ export class IncidentDetailDialogComponent {
     return item.id;
   }
 }
+
+
 

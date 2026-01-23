@@ -33,6 +33,7 @@ import { DATA_API, DataApiService } from '../../core/services/data-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Anomaly, Feed, FeedStatus, Incident, MetricPoint, Rule } from '../../core/models';
 import { mockDataConfig } from '../../core/mock-data/mock-config';
+import { ClockService } from '../../core/services/clock.service';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -89,6 +90,7 @@ export class DashboardPageComponent implements OnInit {
   countdownSeconds = Math.ceil(mockDataConfig.pollingIntervalMs / 1000);
   private readonly refreshIntervalMs = mockDataConfig.pollingIntervalMs;
   private lastRefreshAt = Date.now();
+  readonly now$ = this.clock.now$;
 
   summary = {
     activeFeeds: 0,
@@ -132,7 +134,8 @@ export class DashboardPageComponent implements OnInit {
     @Inject(DATA_API) private readonly api: DataApiService,
     private readonly notify: NotificationService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly destroyRef: DestroyRef
+    private readonly destroyRef: DestroyRef,
+    private readonly clock: ClockService
   ) {
     this.dataSource.filterPredicate = (data, filter) => {
       const [search, status] = filter.split('|');

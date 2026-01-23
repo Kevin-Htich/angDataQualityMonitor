@@ -29,6 +29,7 @@ import { NotificationService } from '../../core/services/notification.service';
 import { Anomaly, Feed, Incident } from '../../core/models';
 import { IncidentCreateDialogComponent } from './incident-create.dialog';
 import { IncidentDetailDialogComponent } from './incident-detail.dialog';
+import { ClockService } from '../../core/services/clock.service';
 
 @Component({
   selector: 'app-incidents-page',
@@ -77,6 +78,7 @@ export class IncidentsPageComponent implements OnInit {
   dataSource = new MatTableDataSource<Incident>([]);
   feeds: Feed[] = [];
   anomalies: Anomaly[] = [];
+  readonly now$ = this.clock.now$;
 
   loading = true;
 
@@ -85,7 +87,8 @@ export class IncidentsPageComponent implements OnInit {
     private readonly notify: NotificationService,
     private readonly dialog: MatDialog,
     private readonly cdr: ChangeDetectorRef,
-    private readonly destroyRef: DestroyRef
+    private readonly destroyRef: DestroyRef,
+    private readonly clock: ClockService
   ) {
     this.dataSource.filterPredicate = (data, filter) => {
       const [search, severity, status] = filter.split('|');

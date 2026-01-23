@@ -5,12 +5,12 @@ import { Pipe, PipeTransform } from '@angular/core';
   standalone: true
 })
 export class RelativeTimePipe implements PipeTransform {
-  transform(value: string | Date | null | undefined): string {
+  transform(value: string | Date | null | undefined, nowMs?: number): string {
     if (!value) {
       return '-';
     }
     const date = value instanceof Date ? value : new Date(value);
-    const diffMs = Date.now() - date.getTime();
+    const diffMs = (nowMs ?? Date.now()) - date.getTime();
     const diffSeconds = Math.floor(diffMs / 1000);
     const diffMinutes = Math.floor(diffSeconds / 60);
 
