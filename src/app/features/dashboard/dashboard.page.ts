@@ -25,12 +25,14 @@ import { MatDividerModule } from '@angular/material/divider';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartDataset } from 'chart.js';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { interval, timer } from 'rxjs';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { StatusChipComponent } from '../../shared/components/status-chip/status-chip.component';
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
 import { DATA_API, DataApiService } from '../../core/services/data-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Anomaly, Feed, FeedStatus, Incident, MetricPoint, Rule } from '../../core/models';
+import { mockDataConfig } from '../../core/mock-data/mock-config';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -84,6 +86,9 @@ export class DashboardPageComponent implements OnInit {
 
   loading = true;
   errorMessage = '';
+  countdownSeconds = Math.ceil(mockDataConfig.pollingIntervalMs / 1000);
+  private readonly refreshIntervalMs = mockDataConfig.pollingIntervalMs;
+  private lastRefreshAt = Date.now();
 
   summary = {
     activeFeeds: 0,
@@ -139,6 +144,8 @@ export class DashboardPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadData();
+    this.startCountdown();
+    this.startAutoRefresh();
 
     this.searchControl.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -157,19 +164,27 @@ export class DashboardPageComponent implements OnInit {
     }
   }
 
-  refresh(): void {
+  refresh(showToast = true): void {
     this.api.refresh().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.loadData();
-        this.notify.success('Dashboard refreshed.');
+        if (showToast) {
+          this.notify.success('Dashboard refreshed.');
+        }
       },
-      error: () => this.notify.error('Refresh failed. Try again.')
+      error: () => {
+        if (showToast) {
+          this.notify.error('Refresh failed. Try again.');
+        }
+      }
     });
   }
 
   private loadData(): void {
     this.loading = true;
     this.errorMessage = '';
+    this.lastRefreshAt = Date.now();
+    this.countdownSeconds = Math.ceil(this.refreshIntervalMs / 1000);
 
     this.api.getFeeds().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (feeds) => {
@@ -330,6 +345,23 @@ export class DashboardPageComponent implements OnInit {
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
+  }
+
+  private startCountdown(): void {
+    interval(1000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        const elapsed = Date.now() - this.lastRefreshAt;
+        const remainingMs = this.refreshIntervalMs - (elapsed % this.refreshIntervalMs);
+        this.countdownSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+        this.cdr.markForCheck();
+      });
+  }
+
+  private startAutoRefresh(): void {
+    timer(this.refreshIntervalMs, this.refreshIntervalMs)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.refresh(false));
   }
 
   incidentStatusClass(status: string): string {

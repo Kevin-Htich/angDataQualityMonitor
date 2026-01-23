@@ -1,5 +1,5 @@
 export const mockDataConfig = {
-  pollingIntervalMs: 5000,
+  pollingIntervalMs: 60000,
   ruleCooldownMs: 10 * 60 * 1000,
   network: {
     minDelayMs: 250,

@@ -1,5 +1,6 @@
 <app-page-header title="Dashboard" subtitle="Live view of feed health and anomaly trends">
   <div actions>
+    <span class="refresh-timer muted">Next refresh in {{ countdownSeconds }}s</span>
     <button mat-flat-button color="primary" (click)="refresh()">
       <mat-icon>refresh</mat-icon>
       Refresh
