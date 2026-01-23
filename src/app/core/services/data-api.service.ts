@@ -1,9 +1,6 @@
-import { InjectionToken, inject } from '@angular/core';
+import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Anomaly, Feed, Incident, IncidentStatus, MetricPoint, Rule } from '../models';
-import { environment } from '../../../environments/environment';
-import { MockApiService } from './mock-api.service';
-import { SupabaseApiService } from './supabase-api.service';
 
 export abstract class DataApiService {
   abstract getFeeds(): Observable<Feed[]>;
@@ -29,10 +26,3 @@ export abstract class DataApiService {
 }
 
 export const DATA_API = new InjectionToken<DataApiService>('DATA_API');
-
-export function dataApiFactory(): DataApiService {
-  if (environment.supabase.enabled && environment.supabase.url && environment.supabase.anonKey) {
-    return inject(SupabaseApiService);
-  }
-  return inject(MockApiService);
-}
