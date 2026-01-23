@@ -72,3 +72,23 @@ mat-nav-list a.active {
     display: none;
   }
 }
+
+@media (max-width: 600px) {
+  .app-toolbar {
+    gap: 4px;
+    padding: 0 8px;
+  }
+
+  .toolbar-title {
+    font-size: 0.95rem;
+  }
+
+  button[aria-label='Notifications'],
+  button[aria-label='Settings'] {
+    display: none;
+  }
+
+  .app-content {
+    padding: 12px;
+  }
+}

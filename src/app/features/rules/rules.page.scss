@@ -6,3 +6,37 @@
   overflow: auto;
   margin-top: 16px;
 }
+
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.table-toolbar mat-form-field {
+  min-width: 180px;
+  flex: 1 1 180px;
+}
+
+@media (max-width: 900px) {
+  .table-card {
+    padding: 12px;
+  }
+
+  .mat-column-window {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mat-column-scope,
+  .mat-column-condition {
+    display: none;
+  }
+}

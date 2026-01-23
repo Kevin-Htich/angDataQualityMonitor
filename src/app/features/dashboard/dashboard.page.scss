@@ -25,6 +25,18 @@
   margin-top: 16px;
 }
 
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.table-toolbar mat-form-field {
+  min-width: 180px;
+  flex: 1 1 180px;
+}
+
 table {
   width: 100%;
 }
@@ -151,5 +163,46 @@ tr.mat-mdc-row:nth-child(even) {
   .dashboard-grid,
   .dashboard-bottom {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .table-card {
+    padding: 12px;
+  }
+
+  .chart-card {
+    min-height: 260px;
+  }
+
+  .chart-wrapper {
+    height: 200px;
+  }
+
+  .mat-column-latency {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mat-column-errorRate,
+  .mat-column-lastUpdated {
+    display: none;
+  }
+
+  .incident-item,
+  .rule-item {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
