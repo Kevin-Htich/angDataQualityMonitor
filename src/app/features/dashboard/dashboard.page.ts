@@ -223,7 +223,7 @@ export class DashboardPageComponent implements OnInit {
         this.updateAnomalyChart();
         this.cdr.markForCheck();
       },
-      error: () => this.notify.error('Unable to load anomalies.')
+      //error: () => this.notify.error('Unable to load anomalies.')
     });
 
     this.api.getRules().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({

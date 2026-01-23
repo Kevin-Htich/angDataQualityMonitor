@@ -174,7 +174,7 @@ export class IncidentsPageComponent implements OnInit {
         this.anomalies = anomalies;
         this.cdr.markForCheck();
       },
-      error: () => this.notify.error('Unable to load anomalies.')
+      //error: () => this.notify.error('Unable to load anomalies.')
     });
 
     this.loadIncidents();
