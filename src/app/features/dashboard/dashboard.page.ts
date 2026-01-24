@@ -84,6 +84,8 @@ export class DashboardPageComponent implements OnInit {
   incidents: Incident[] = [];
   anomalies: Anomaly[] = [];
   rules: Rule[] = [];
+  private cachedIncidents: Incident[] = [];
+  private cachedRules: Rule[] = [];
 
   loading = true;
   errorMessage = '';
@@ -210,16 +212,32 @@ export class DashboardPageComponent implements OnInit {
       }
     });
 
-    this.api.getIncidents().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (incidents) => {
-        this.incidents = incidents;
-        this.updateSummary();
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.notify.error('Unable to load incidents.');
-      }
-    });
+    this.api
+      .getIncidents()
+      .pipe(
+        retry({
+          count: 2,
+          delay: (_error, retryCount) => timer(200 * retryCount)
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (incidents) => {
+          this.incidents = incidents;
+          this.cachedIncidents = incidents;
+          this.updateSummary();
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          if (this.cachedIncidents.length) {
+            this.incidents = this.cachedIncidents;
+            this.updateSummary();
+            this.cdr.markForCheck();
+            return;
+          }
+          this.notify.error('Unable to load incidents.');
+        }
+      });
 
     this.api.getAnomalies().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (anomalies) => {
@@ -230,13 +248,30 @@ export class DashboardPageComponent implements OnInit {
       //error: () => this.notify.error('Unable to load anomalies.')
     });
 
-    this.api.getRules().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (rules) => {
-        this.rules = rules;
-        this.cdr.markForCheck();
-      },
-      error: () => this.notify.error('Unable to load rules.')
-    });
+    this.api
+      .getRules()
+      .pipe(
+        retry({
+          count: 2,
+          delay: (_error, retryCount) => timer(200 * retryCount)
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (rules) => {
+          this.rules = rules;
+          this.cachedRules = rules;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          if (this.cachedRules.length) {
+            this.rules = this.cachedRules;
+            this.cdr.markForCheck();
+            return;
+          }
+          this.notify.error('Unable to load rules.');
+        }
+      });
 
     this.loadMetrics();
   }
