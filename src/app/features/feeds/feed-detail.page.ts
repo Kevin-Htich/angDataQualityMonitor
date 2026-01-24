@@ -19,6 +19,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartDataset } from 'chart.js';
 import { distinctUntilChanged, map } from 'rxjs/operators';
+import { retry, timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { StatusChipComponent } from '../../shared/components/status-chip/status-chip.component';
@@ -67,6 +68,8 @@ export class FeedDetailPageComponent implements OnInit {
 
   lineChartData: ChartDataset<'line'>[] = [];
   lineChartLabels: string[] = [];
+  private cachedMetrics: MetricPoint[] = [];
+  private cachedFeedId?: string;
   lineChartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -124,6 +127,10 @@ export class FeedDetailPageComponent implements OnInit {
 
   private loadFeed(feedId: string): void {
     this.loading = true;
+    if (this.cachedFeedId !== feedId) {
+      this.cachedFeedId = feedId;
+      this.cachedMetrics = [];
+    }
 
     this.api.getFeed(feedId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (feed) => {
@@ -138,14 +145,32 @@ export class FeedDetailPageComponent implements OnInit {
       }
     });
 
-    this.api.getMetrics(feedId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (metrics) => {
-        this.metrics = metrics;
-        this.updateChart(metrics);
-        this.cdr.markForCheck();
-      },
-      error: () => this.notify.error('Unable to load metrics.')
-    });
+    this.api
+      .getMetrics(feedId)
+      .pipe(
+        retry({
+          count: 2,
+          delay: (_error, retryCount) => timer(200 * retryCount)
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (metrics) => {
+          this.metrics = metrics;
+          this.cachedMetrics = metrics;
+          this.updateChart(metrics);
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          if (this.cachedMetrics.length) {
+            this.metrics = this.cachedMetrics;
+            this.updateChart(this.cachedMetrics);
+            this.cdr.markForCheck();
+            return;
+          }
+          this.notify.error('Unable to load metrics.');
+        }
+      });
 
     this.api.getAnomalies(feedId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (anomalies) => {

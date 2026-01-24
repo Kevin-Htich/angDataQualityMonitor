@@ -25,7 +25,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartDataset } from 'chart.js';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { interval, timer } from 'rxjs';
+import { interval, retry, timer } from 'rxjs';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { StatusChipComponent } from '../../shared/components/status-chip/status-chip.component';
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
@@ -102,6 +102,7 @@ export class DashboardPageComponent implements OnInit {
   errorRateChartData: ChartDataset<'line'>[] = [];
   latencyChartData: ChartDataset<'line'>[] = [];
   lineChartLabels: string[] = [];
+  private cachedMetrics: MetricPoint[] = [];
 
   barChartData: ChartConfiguration<'bar'>['data'] = {
     labels: ['Data Drift', 'Latency Spike', 'Volume Drop'],
@@ -195,6 +196,9 @@ export class DashboardPageComponent implements OnInit {
         this.dataSource.data = feeds;
         this.applyFilter();
         this.updateSummary();
+        if (this.cachedMetrics.length) {
+          this.updateLineCharts(this.cachedMetrics);
+        }
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -238,13 +242,30 @@ export class DashboardPageComponent implements OnInit {
   }
 
   private loadMetrics(): void {
-    this.api.getMetrics().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (metrics) => {
-        this.updateLineCharts(metrics);
-        this.cdr.markForCheck();
-      },
-      error: () => this.notify.error('Unable to load metrics.')
-    });
+    this.api
+      .getMetrics()
+      .pipe(
+        retry({
+          count: 2,
+          delay: (_error, retryCount) => timer(200 * retryCount)
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (metrics) => {
+          this.cachedMetrics = metrics;
+          this.updateLineCharts(metrics);
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          if (this.cachedMetrics.length) {
+            this.updateLineCharts(this.cachedMetrics);
+            this.cdr.markForCheck();
+            return;
+          }
+          this.notify.error('Unable to load metrics.');
+        }
+      });
   }
 
   private updateSummary(): void {
